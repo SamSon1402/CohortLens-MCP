@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CohortLens-MCP — Biomarker Cohort Survival Analysis | Owkin K Compatible</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #06b6d4;
+            --primary-glow: rgba(6, 182, 212, 0.4);
+            --secondary: #3b82f6;
+            --accent: #14b8a6;
+            --warning: #f59e0b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --high: #f97316;
+            --low: #06b6d4;
+            --bg-dark: #020617;
+            --bg-card: #0f172a;
+            --bg-elevated: #1e293b;
+            --bg-deeper: #050b1a;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border: #1e3a5f;
+            --grid-line: #1e293b;
+            --mcp-gradient: linear-gradient(135deg, #06b6d4 0%, #3b82f6 50%, #14b8a6 100%);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Sora', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            background-image:
+                radial-gradient(ellipse at 0% 0%, rgba(6, 182, 212, 0.10) 0%, transparent 50%),
+                radial-gradient(ellipse at 100% 100%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(20, 184, 166, 0.04) 0%, transparent 70%);
+        }
+
+        .header {
+            background: linear-gradient(180deg, rgba(6, 182, 212, 0.06) 0%, transparent 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 0.75rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(20px);
+        }
+
+        .header-content {
+            max-width: 1800px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo { display: flex; align-items: center; gap: 0.75rem; }
+
+        .logo-icon {
+            width: 46px; height: 46px;
+            background: var(--mcp-gradient);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem;
+            position: relative;
+        }
+
+        .logo-icon::after {
+            content: '';
+            position: absolute; inset: -2px;
+            background: var(--mcp-gradient);
+            border-radius: 14px; z-index: -1;
+            opacity: 0.5; filter: blur(8px);
+        }
+
+        .logo-text {
+            font-size: 1.5rem; font-weight: 800;
+            background: var(--mcp-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-subtitle {
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-weight: 500;
+        }
+
+        .header-badges { display: flex; gap: 0.4rem; }
+
+        .badge {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 0.35rem 0.7rem;
+            border-radius: 6px;
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            font-family: 'Fira Code', monospace;
+        }
+
+        .badge.live {
+            background: rgba(6, 182, 212, 0.15);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .badge.live::before {
+            content: '';
+            display: inline-block;
+            width: 6px; height: 6px;
+            background: var(--primary);
+            border-radius: 50%;
+            margin-right: 5px;
+            animation: livePulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes livePulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 var(--primary-glow); }
+            50% { opacity: 0.6; box-shadow: 0 0 0 8px transparent; }
+        }
+
+        .main {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 1.5rem 2rem;
+        }
+
+        .hero { text-align: center; margin-bottom: 1.5rem; }
+
+        .hero h1 {
+            font-size: 2.4rem;
+            font-weight: 800;
+            margin-bottom: 0.4rem;
+            background: var(--mcp-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p { color: var(--text-secondary); font-size: 1rem; }
+
+        .workspace {
+            display: grid;
+            grid-template-columns: 360px 1fr 380px;
+            gap: 1.25rem;
+        }
+
+        @media (max-width: 1400px) {
+            .workspace { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+            background: linear-gradient(180deg, rgba(30, 41, 59, 0.6) 0%, transparent 100%);
+        }
+
+        .card-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+
+        .card-body { padding: 1.25rem; }
+
+        /* MCP Server Panel */
+        .mcp-status {
+            background: var(--bg-elevated);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .mcp-conn {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .conn-dot {
+            width: 10px; height: 10px;
+            background: var(--success);
+            border-radius: 50%;
+            box-shadow: 0 0 12px var(--success);
+            animation: livePulse 2s ease-in-out infinite;
+        }
+
+        .conn-text {
+            font-size: 0.78rem;
+            font-family: 'Fira Code', monospace;
+            color: var(--text-secondary);
+        }
+
+        .conn-url {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.7rem;
+            color: var(--primary);
+            background: var(--bg-dark);
+            padding: 0.4rem 0.6rem;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            word-break: break-all;
+        }
+
+        .tools-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .tool-item {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0.7rem 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .tool-item:hover {
+            border-color: var(--primary);
+            background: rgba(6, 182, 212, 0.08);
+            transform: translateX(2px);
+        }
+
+        .tool-item.active {
+            border-color: var(--primary);
+            background: rgba(6, 182, 212, 0.15);
+            box-shadow: 0 0 16px rgba(6, 182, 212, 0.3);
+        }
+
+        .tool-info { display: flex; align-items: center; gap: 0.55rem; }
+        .tool-icon { font-size: 0.95rem; }
+
+        .tool-name {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.72rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .tool-count {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            background: var(--bg-dark);
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'Fira Code', monospace;
+        }
+
+        /* Chat Input */
+        .chat-input-wrap {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .chat-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-family: 'Sora', sans-serif;
+            font-size: 0.82rem;
+            outline: none;
+            resize: none;
+            min-height: 48px;
+        }
+
+        .chat-input::placeholder { color: var(--text-muted); }
+
+        .chat-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .chat-hint {
+            font-size: 0.62rem;
+            color: var(--text-muted);
+            font-family: 'Fira Code', monospace;
+        }
+
+        .send-btn {
+            background: var(--mcp-gradient);
+            color: white;
+            border: none;
+            padding: 0.4rem 0.9rem;
+            border-radius: 6px;
+            font-family: 'Sora', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .send-btn:hover { transform: scale(1.05); }
+        .send-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        /* Sample Prompts */
+        .prompts-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            margin-top: 0.75rem;
+        }
+
+        .prompt-chip {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.55rem 0.7rem;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .prompt-chip:hover {
+            border-color: var(--primary);
+            color: var(--text-primary);
+            background: rgba(6, 182, 212, 0.08);
+        }
+
+        /* Center: Survival Plot */
+        .plot-container {
+            background: var(--bg-deeper);
+            border-radius: 12px;
+            padding: 1.25rem;
+            position: relative;
+            min-height: 360px;
+        }
+
+        .plot-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .plot-subtitle {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .km-svg {
+            width: 100%;
+            height: 320px;
+        }
+
+        .km-axis { stroke: var(--text-muted); stroke-width: 1; }
+        .km-grid { stroke: var(--grid-line); stroke-width: 0.5; stroke-dasharray: 3 3; }
+        .km-label { fill: var(--text-secondary); font-size: 10px; font-family: 'Fira Code'; }
+
+        .km-curve-high { fill: none; stroke: var(--high); stroke-width: 2.5; }
+        .km-curve-low { fill: none; stroke: var(--low); stroke-width: 2.5; }
+
+        .km-confidence-high { fill: var(--high); fill-opacity: 0.12; stroke: none; }
+        .km-confidence-low { fill: var(--low); fill-opacity: 0.12; stroke: none; }
+
+        .km-censor { stroke: currentColor; stroke-width: 1.5; }
+
+        .plot-legend {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 0.75rem;
+            font-size: 0.72rem;
+        }
+
+        .legend-item { display: flex; align-items: center; gap: 0.4rem; }
+
+        .legend-swatch {
+            width: 18px; height: 3px;
+            border-radius: 2px;
+        }
+
+        /* Risk Table */
+        .risk-table {
+            margin-top: 1rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0.75rem;
+        }
+
+        .risk-table-title {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .risk-grid {
+            display: grid;
+            grid-template-columns: 80px repeat(7, 1fr);
+            gap: 0.4rem;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.65rem;
+        }
+
+        .risk-grid > div { padding: 0.2rem; text-align: center; }
+        .risk-grid > .risk-row-label { text-align: left; color: var(--text-muted); }
+        .risk-grid > .risk-header {
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.4rem;
+        }
+        .risk-grid > .risk-cell-high { color: var(--high); font-weight: 500; }
+        .risk-grid > .risk-cell-low { color: var(--low); font-weight: 500; }
+
+        /* Tool Call Stream */
+        .tool-stream {
+            background: var(--bg-deeper);
+            border-radius: 10px;
+            padding: 0.75rem;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.7rem;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 1rem;
+        }
+
+        .stream-line {
+            padding: 0.25rem 0;
+            display: flex;
+            gap: 0.5rem;
+            align-items: flex-start;
+            animation: streamIn 0.3s ease;
+        }
+
+        @keyframes streamIn {
+            from { opacity: 0; transform: translateX(-5px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .stream-time { color: var(--text-muted); flex-shrink: 0; }
+        .stream-arrow { color: var(--primary); flex-shrink: 0; }
+        .stream-call { color: var(--accent); }
+        .stream-result { color: var(--text-primary); }
+        .stream-meta { color: var(--text-muted); margin-left: 5.5rem; font-size: 0.65rem; }
+
+        /* Right Sidebar */
+        .sidebar { display: flex; flex-direction: column; gap: 1rem; }
+
+        .biomarker-input {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 0.6rem 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .biomarker-input input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            outline: none;
+        }
+
+        .biomarker-input .gene-tag {
+            background: var(--mcp-gradient);
+            color: white;
+            font-size: 0.6rem;
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'Fira Code';
+        }
+
+        .indication-select {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.4rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .indication-btn {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.5rem;
+            color: var(--text-secondary);
+            font-family: 'Sora', sans-serif;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .indication-btn:hover {
+            border-color: var(--primary);
+            color: var(--text-primary);
+        }
+
+        .indication-btn.active {
+            border-color: var(--primary);
+            background: rgba(6, 182, 212, 0.15);
+            color: var(--primary);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+        }
+
+        .stat-card {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0.75rem;
+        }
+
+        .stat-card-label {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.3rem;
+        }
+
+        .stat-card-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .stat-card-value.green { color: var(--success); }
+        .stat-card-value.warn { color: var(--warning); }
+        .stat-card-value.cyan { color: var(--primary); }
+        .stat-card-value.danger { color: var(--danger); }
+
+        .stat-card-sub {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+            font-family: 'Fira Code', monospace;
+        }
+
+        /* Cohort Split Bar */
+        .split-bar {
+            display: flex;
+            height: 32px;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .split-bar-low {
+            background: linear-gradient(90deg, var(--low), rgba(6, 182, 212, 0.6));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.7rem; font-weight: 600;
+            color: white;
+        }
+
+        .split-bar-high {
+            background: linear-gradient(90deg, rgba(249, 115, 22, 0.6), var(--high));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.7rem; font-weight: 600;
+            color: white;
+        }
+
+        .cohort-counts {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            font-family: 'Fira Code', monospace;
+        }
+
+        .cohort-count-high { color: var(--high); }
+        .cohort-count-low { color: var(--low); }
+
+        /* Export buttons */
+        .export-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+        }
+
+        .export-btn {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.6rem;
+            color: var(--text-primary);
+            font-family: 'Fira Code', monospace;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+        }
+
+        .export-btn:hover {
+            border-color: var(--primary);
+            background: rgba(6, 182, 212, 0.08);
+        }
+
+        /* Loading overlay */
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 6, 23, 0.97);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .loading-overlay.active { display: flex; }
+
+        .mcp-anim {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 2rem;
+        }
+
+        .mcp-node {
+            width: 36px; height: 36px;
+            border-radius: 8px;
+            background: var(--primary);
+            opacity: 0.3;
+            animation: nodeWave 1.5s ease-in-out infinite;
+        }
+
+        .mcp-node:nth-child(1) { animation-delay: 0s; }
+        .mcp-node:nth-child(2) { animation-delay: 0.1s; background: var(--secondary); }
+        .mcp-node:nth-child(3) { animation-delay: 0.2s; background: var(--accent); }
+        .mcp-node:nth-child(4) { animation-delay: 0.3s; background: var(--secondary); }
+        .mcp-node:nth-child(5) { animation-delay: 0.4s; }
+        .mcp-node:nth-child(6) { animation-delay: 0.5s; background: var(--accent); }
+        .mcp-node:nth-child(7) { animation-delay: 0.6s; background: var(--accent); }
+        .mcp-node:nth-child(8) { animation-delay: 0.7s; }
+        .mcp-node:nth-child(9) { animation-delay: 0.8s; background: var(--secondary); }
+
+        @keyframes nodeWave {
+            0%, 100% { opacity: 0.3; transform: scale(0.85); }
+            50% { opacity: 1; transform: scale(1); }
+        }
+
+        .loading-text { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .loading-stage {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-bottom: 1.25rem;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .loading-progress {
+            width: 280px; height: 4px;
+            background: var(--bg-elevated);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .loading-bar {
+            height: 100%;
+            background: var(--mcp-gradient);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed; bottom: 1.5rem; right: 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 0.85rem 1.25rem;
+            display: flex; align-items: center; gap: 0.6rem;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.6);
+            transform: translateY(100px); opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+        }
+
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast-icon { font-size: 1.3rem; }
+        .toast-title { font-size: 0.85rem; font-weight: 600; }
+        .toast-message { font-size: 0.7rem; color: var(--text-muted); }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">🧬</div>
+                <div>
+                    <div class="logo-text">CohortLens-MCP</div>
+                    <div class="logo-subtitle">Owkin K Compatible · Biomarker Cohort Analysis</div>
+                </div>
+            </div>
+            <div class="header-badges">
+                <span class="badge live">● MCP Connected</span>
+                <span class="badge">FastMCP 2.0</span>
+                <span class="badge">Kaplan-Meier</span>
+                <span class="badge">5 Tools</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="hero">
+            <h1>🧬 Biomarker Cohort Survival Analysis</h1>
+            <p>Test clinical hypotheses by splitting patient cohorts on biomarker expression — Kaplan-Meier curves in seconds via MCP</p>
+        </div>
+
+        <div class="workspace">
+            <!-- LEFT: MCP Server Panel -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">⚡ MCP Server</h3>
+                    <span style="font-size: 0.65rem; color: var(--text-muted); font-family: 'Fira Code';" id="latencyDisplay">42ms</span>
+                </div>
+                <div class="card-body">
+                    <div class="mcp-status">
+                        <div class="mcp-conn">
+                            <div class="conn-dot"></div>
+                            <div class="conn-text">stdio · session active</div>
+                        </div>
+                        <div class="conn-url">cohortlens-mcp.fly.dev/sse</div>
+                    </div>
+
+                    <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.5rem; font-weight: 600;">
+                        Available Tools
+                    </div>
+                    <div class="tools-list">
+                        <div class="tool-item" id="tool-split" onclick="highlightTool('tool-split')">
+                            <div class="tool-info">
+                                <span class="tool-icon">✂️</span>
+                                <span class="tool-name">split_cohort_by_biomarker</span>
+                            </div>
+                            <span class="tool-count" id="count-split">0</span>
+                        </div>
+                        <div class="tool-item" id="tool-km" onclick="highlightTool('tool-km')">
+                            <div class="tool-info">
+                                <span class="tool-icon">📈</span>
+                                <span class="tool-name">run_kaplan_meier</span>
+                            </div>
+                            <span class="tool-count" id="count-km">0</span>
+                        </div>
+                        <div class="tool-item" id="tool-hr" onclick="highlightTool('tool-hr')">
+                            <div class="tool-info">
+                                <span class="tool-icon">⚖️</span>
+                                <span class="tool-name">compute_hazard_ratio</span>
+                            </div>
+                            <span class="tool-count" id="count-hr">0</span>
+                        </div>
+                        <div class="tool-item" id="tool-meta" onclick="highlightTool('tool-meta')">
+                            <div class="tool-info">
+                                <span class="tool-icon">🗂️</span>
+                                <span class="tool-name">fetch_patient_metadata</span>
+                            </div>
+                            <span class="tool-count" id="count-meta">0</span>
+                        </div>
+                        <div class="tool-item" id="tool-export" onclick="highlightTool('tool-export')">
+                            <div class="tool-info">
+                                <span class="tool-icon">💾</span>
+                                <span class="tool-name">export_cohort_parquet</span>
+                            </div>
+                            <span class="tool-count" id="count-export">0</span>
+                        </div>
+                    </div>
+
+                    <div class="chat-input-wrap">
+                        <textarea class="chat-input" id="chatInput" placeholder="Ask a clinical question..."></textarea>
+                        <div class="chat-actions">
+                            <span class="chat-hint">Cmd+Enter to send</span>
+                            <button class="send-btn" id="sendBtn" onclick="runQuery()">▶ Run</button>
+                        </div>
+                    </div>
+
+                    <div style="font-size: 0.65rem; color: var(--text-muted); margin-top: 0.85rem; margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 1px;">
+                        Sample Prompts
+                    </div>
+                    <div class="prompts-list">
+                        <div class="prompt-chip" onclick="usePrompt(this)">Is high CD8A expression associated with overall survival in TCGA-BLCA?</div>
+                        <div class="prompt-chip" onclick="usePrompt(this)">Stratify lung adenocarcinoma by KEAP1 status, plot KM</div>
+                        <div class="prompt-chip" onclick="usePrompt(this)">Compute hazard ratio for TP53 mutants in breast cancer</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CENTER: Survival Plot -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">📊 Kaplan-Meier Survival Curve</h3>
+                    <span style="font-size: 0.65rem; color: var(--text-muted); font-family: 'Fira Code';" id="cohortInfo">No cohort loaded</span>
+                </div>
+                <div class="card-body">
+                    <div class="plot-container">
+                        <div class="plot-title" id="plotTitle">Awaiting query...</div>
+                        <div class="plot-subtitle" id="plotSubtitle">Run a query or pick a sample prompt</div>
+                        <svg class="km-svg" id="kmSvg" viewBox="0 0 700 320" preserveAspectRatio="none">
+                            <!-- Grid -->
+                            <g id="kmGrid"></g>
+                            <!-- Axes -->
+                            <line class="km-axis" x1="60" y1="20" x2="60" y2="280"></line>
+                            <line class="km-axis" x1="60" y1="280" x2="680" y2="280"></line>
+                            <!-- Y labels -->
+                            <text class="km-label" x="50" y="25" text-anchor="end">1.0</text>
+                            <text class="km-label" x="50" y="90" text-anchor="end">0.75</text>
+                            <text class="km-label" x="50" y="155" text-anchor="end">0.50</text>
+                            <text class="km-label" x="50" y="220" text-anchor="end">0.25</text>
+                            <text class="km-label" x="50" y="285" text-anchor="end">0.00</text>
+                            <!-- X labels -->
+                            <text class="km-label" x="60" y="300" text-anchor="middle">0</text>
+                            <text class="km-label" x="184" y="300" text-anchor="middle">12</text>
+                            <text class="km-label" x="308" y="300" text-anchor="middle">24</text>
+                            <text class="km-label" x="432" y="300" text-anchor="middle">36</text>
+                            <text class="km-label" x="556" y="300" text-anchor="middle">48</text>
+                            <text class="km-label" x="680" y="300" text-anchor="middle">60</text>
+                            <!-- Axis titles -->
+                            <text class="km-label" x="370" y="316" text-anchor="middle" style="font-size: 11px;">Months from diagnosis</text>
+                            <text class="km-label" x="20" y="155" text-anchor="middle" transform="rotate(-90, 20, 155)" style="font-size: 11px;">Survival probability</text>
+                            <!-- Curves placeholder -->
+                            <g id="kmCurves"></g>
+                        </svg>
+                        <div class="plot-legend">
+                            <div class="legend-item">
+                                <div class="legend-swatch" style="background: var(--high);"></div>
+                                <span>High biomarker (n=<span id="highN">—</span>)</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-swatch" style="background: var(--low);"></div>
+                                <span>Low biomarker (n=<span id="lowN">—</span>)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="risk-table">
+                        <div class="risk-table-title">Number at risk</div>
+                        <div class="risk-grid">
+                            <div class="risk-header risk-row-label"></div>
+                            <div class="risk-header">0</div>
+                            <div class="risk-header">12</div>
+                            <div class="risk-header">24</div>
+                            <div class="risk-header">36</div>
+                            <div class="risk-header">48</div>
+                            <div class="risk-header">60</div>
+                            <div class="risk-header">Months</div>
+                            <div class="risk-row-label">High</div>
+                            <div class="risk-cell-high" id="rh0">—</div>
+                            <div class="risk-cell-high" id="rh12">—</div>
+                            <div class="risk-cell-high" id="rh24">—</div>
+                            <div class="risk-cell-high" id="rh36">—</div>
+                            <div class="risk-cell-high" id="rh48">—</div>
+                            <div class="risk-cell-high" id="rh60">—</div>
+                            <div></div>
+                            <div class="risk-row-label">Low</div>
+                            <div class="risk-cell-low" id="rl0">—</div>
+                            <div class="risk-cell-low" id="rl12">—</div>
+                            <div class="risk-cell-low" id="rl24">—</div>
+                            <div class="risk-cell-low" id="rl36">—</div>
+                            <div class="risk-cell-low" id="rl48">—</div>
+                            <div class="risk-cell-low" id="rl60">—</div>
+                            <div></div>
+                        </div>
+                    </div>
+
+                    <div class="tool-stream" id="toolStream">
+                        <div class="stream-line">
+                            <span class="stream-time">--:--:--</span>
+                            <span class="stream-arrow">»</span>
+                            <span class="stream-result">Awaiting query. Run a sample prompt or type your own clinical question.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: Stats & Controls -->
+            <div class="sidebar">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">🎯 Cohort Configuration</h3>
+                    </div>
+                    <div class="card-body">
+                        <div style="font-size: 0.65rem; color: var(--text-muted); margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 1px;">Indication</div>
+                        <div class="indication-select">
+                            <button class="indication-btn active" onclick="selectIndication(this, 'TCGA-BLCA')">Bladder</button>
+                            <button class="indication-btn" onclick="selectIndication(this, 'TCGA-LUAD')">Lung Adeno.</button>
+                            <button class="indication-btn" onclick="selectIndication(this, 'TCGA-BRCA')">Breast</button>
+                            <button class="indication-btn" onclick="selectIndication(this, 'TCGA-COAD')">Colon</button>
+                        </div>
+
+                        <div style="font-size: 0.65rem; color: var(--text-muted); margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 1px;">Biomarker</div>
+                        <div class="biomarker-input">
+                            <span class="gene-tag">GENE</span>
+                            <input id="biomarkerInput" type="text" value="CD8A" placeholder="Symbol or pathway">
+                        </div>
+
+                        <div style="font-size: 0.65rem; color: var(--text-muted); margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 1px;">Cohort split (median expression)</div>
+                        <div class="split-bar">
+                            <div class="split-bar-low" style="width: 50%" id="splitLow">Low 50%</div>
+                            <div class="split-bar-high" style="width: 50%" id="splitHigh">High 50%</div>
+                        </div>
+                        <div class="cohort-counts">
+                            <span class="cohort-count-low">Low: <span id="lowCount">—</span></span>
+                            <span class="cohort-count-high">High: <span id="highCount">—</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">📐 Statistical Results</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-card-label">Hazard Ratio</div>
+                                <div class="stat-card-value cyan" id="hrValue">—</div>
+                                <div class="stat-card-sub" id="hrCI">95% CI: —</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-card-label">Log-rank p</div>
+                                <div class="stat-card-value green" id="pValue">—</div>
+                                <div class="stat-card-sub" id="pSig">—</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-card-label">Median OS High</div>
+                                <div class="stat-card-value warn" id="medianHigh">—</div>
+                                <div class="stat-card-sub">months</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-card-label">Median OS Low</div>
+                                <div class="stat-card-value cyan" id="medianLow">—</div>
+                                <div class="stat-card-sub">months</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">💾 Export</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="export-row">
+                            <button class="export-btn" onclick="exportData('parquet')">📦 Parquet</button>
+                            <button class="export-btn" onclick="exportData('csv')">📄 CSV</button>
+                            <button class="export-btn" onclick="exportData('plot')">🖼️ Plot SVG</button>
+                            <button class="export-btn" onclick="exportData('json')">{ } JSON</button>
+                        </div>
+                        <div style="margin-top: 0.85rem; padding: 0.75rem; background: var(--bg-elevated); border-radius: 8px; font-family: 'Fira Code'; font-size: 0.65rem; color: var(--text-muted); line-height: 1.5;">
+                            <span style="color: var(--primary);">$</span> mcp call export_cohort_parquet \<br>
+                            &nbsp;&nbsp;--cohort=<span style="color: var(--accent);">"BLCA-CD8A"</span> \<br>
+                            &nbsp;&nbsp;--format=parquet
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="mcp-anim">
+            <div class="mcp-node"></div><div class="mcp-node"></div><div class="mcp-node"></div>
+            <div class="mcp-node"></div><div class="mcp-node"></div><div class="mcp-node"></div>
+            <div class="mcp-node"></div><div class="mcp-node"></div><div class="mcp-node"></div>
+        </div>
+        <div class="loading-text">Calling MCP tools...</div>
+        <div class="loading-stage" id="loadingStage">Routing to FastMCP server...</div>
+        <div class="loading-progress">
+            <div class="loading-bar" id="loadingBar"></div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">
+        <span class="toast-icon">✅</span>
+        <div>
+            <div class="toast-title" id="toastTitle">Success!</div>
+            <div class="toast-message" id="toastMessage">Operation complete</div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        const counts = { split: 0, km: 0, hr: 0, meta: 0, export: 0 };
+        let currentIndication = 'TCGA-BLCA';
+
+        // Sample cohorts (precomputed for demo realism)
+        const cohorts = {
+            'TCGA-BLCA-CD8A': {
+                title: 'Bladder Carcinoma · CD8A expression',
+                subtitle: 'TCGA-BLCA · n=412 · stratified by median TPM',
+                highN: 206, lowN: 206,
+                medianHigh: 41.2, medianLow: 23.8,
+                hr: 0.61, hrLow: 0.43, hrHigh: 0.86, p: 0.0042,
+                riskHigh: [206, 178, 142, 108, 78, 52],
+                riskLow: [206, 158, 105, 68, 41, 24],
+                curveHigh: generateKMCurve(206, 0.78, 0.62, 0.50, 0.42, 0.36, 0.31),
+                curveLow:  generateKMCurve(206, 0.72, 0.51, 0.34, 0.22, 0.15, 0.10)
+            },
+            'TCGA-LUAD-KEAP1': {
+                title: 'Lung Adenocarcinoma · KEAP1 status',
+                subtitle: 'TCGA-LUAD · n=487 · mutant vs wild-type',
+                highN: 96, lowN: 391,
+                medianHigh: 18.6, medianLow: 38.1,
+                hr: 1.74, hrLow: 1.28, hrHigh: 2.36, p: 0.0006,
+                riskHigh: [96, 72, 50, 30, 18, 9],
+                riskLow: [391, 332, 258, 186, 132, 84],
+                curveHigh: generateKMCurve(96, 0.70, 0.48, 0.30, 0.18, 0.10, 0.06),
+                curveLow:  generateKMCurve(391, 0.82, 0.66, 0.52, 0.40, 0.30, 0.22)
+            },
+            'TCGA-BRCA-TP53': {
+                title: 'Breast Carcinoma · TP53 mutation status',
+                subtitle: 'TCGA-BRCA · n=982 · mutant vs wild-type',
+                highN: 327, lowN: 655,
+                medianHigh: 52.4, medianLow: 78.9,
+                hr: 1.52, hrLow: 1.21, hrHigh: 1.91, p: 0.0003,
+                riskHigh: [327, 282, 220, 168, 122, 88],
+                riskLow: [655, 598, 510, 412, 324, 248],
+                curveHigh: generateKMCurve(327, 0.85, 0.74, 0.62, 0.51, 0.42, 0.34),
+                curveLow:  generateKMCurve(655, 0.91, 0.84, 0.76, 0.68, 0.61, 0.54)
+            },
+            'TCGA-COAD-MSI': {
+                title: 'Colon Adenocarcinoma · MSI status',
+                subtitle: 'TCGA-COAD · n=296 · MSI-high vs MSS',
+                highN: 63, lowN: 233,
+                medianHigh: 64.2, medianLow: 38.7,
+                hr: 0.58, hrLow: 0.36, hrHigh: 0.93, p: 0.024,
+                riskHigh: [63, 56, 48, 41, 33, 26],
+                riskLow: [233, 198, 156, 116, 82, 58],
+                curveHigh: generateKMCurve(63, 0.92, 0.84, 0.74, 0.65, 0.57, 0.49),
+                curveLow:  generateKMCurve(233, 0.84, 0.70, 0.55, 0.42, 0.32, 0.24)
+            }
+        };
+
+        function generateKMCurve(n, ...checkpoints) {
+            // Generate stepped survival curve points across 60 months
+            const points = [{t: 0, s: 1.0}];
+            const tValues = [0, 12, 24, 36, 48, 60];
+            for (let i = 1; i < tValues.length; i++) {
+                const startT = tValues[i-1];
+                const endT = tValues[i];
+                const startS = i === 1 ? 1.0 : checkpoints[i-2];
+                const endS = checkpoints[i-1];
+                const steps = 18 + Math.floor(Math.random() * 8);
+                for (let j = 1; j <= steps; j++) {
+                    const t = startT + (endT - startT) * (j / steps);
+                    const s = startS - (startS - endS) * (j / steps) + (Math.random() - 0.5) * 0.008;
+                    // Step-down events
+                    points.push({t: t, s: points[points.length - 1].s});
+                    points.push({t: t, s: Math.max(0, Math.min(1, s))});
+                }
+            }
+            return points;
+        }
+
+        function init() {
+            drawGrid();
+        }
+
+        function drawGrid() {
+            const grid = document.getElementById('kmGrid');
+            let html = '';
+            // Vertical grid lines
+            for (let i = 1; i < 6; i++) {
+                const x = 60 + (620 / 5) * i;
+                html += `<line class="km-grid" x1="${x}" y1="20" x2="${x}" y2="280"></line>`;
+            }
+            // Horizontal grid lines
+            for (let i = 1; i < 5; i++) {
+                const y = 20 + (260 / 4) * i;
+                html += `<line class="km-grid" x1="60" y1="${y}" x2="680" y2="${y}"></line>`;
+            }
+            grid.innerHTML = html;
+        }
+
+        function plotCurve(curveData, className, animate = true) {
+            // Convert points to SVG path
+            const xScale = 620 / 60;
+            const yScale = 260;
+            const pathParts = curveData.map((p, i) => {
+                const x = 60 + p.t * xScale;
+                const y = 20 + (1 - p.s) * yScale;
+                return `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`;
+            });
+            return `<path class="${className}" d="${pathParts.join(' ')}" ${animate ? 'stroke-dasharray="2000" stroke-dashoffset="2000"' : ''} />`;
+        }
+
+        function drawCurves(cohort) {
+            const svg = document.getElementById('kmCurves');
+            svg.innerHTML = plotCurve(cohort.curveHigh, 'km-curve-high') +
+                            plotCurve(cohort.curveLow, 'km-curve-low');
+            // Animate
+            requestAnimationFrame(() => {
+                document.querySelectorAll('.km-curve-high, .km-curve-low').forEach(el => {
+                    el.style.transition = 'stroke-dashoffset 1.4s ease-out';
+                    el.style.strokeDashoffset = '0';
+                });
+            });
+        }
+
+        function highlightTool(id) {
+            document.querySelectorAll('.tool-item').forEach(t => t.classList.remove('active'));
+            const el = document.getElementById(id);
+            if (el) {
+                el.classList.add('active');
+                setTimeout(() => el.classList.remove('active'), 1500);
+            }
+        }
+
+        function streamLine(call, result, meta = '') {
+            const stream = document.getElementById('toolStream');
+            const time = new Date().toTimeString().slice(0,8);
+            const line = document.createElement('div');
+            line.className = 'stream-line';
+            line.innerHTML = `
+                <span class="stream-time">${time}</span>
+                <span class="stream-arrow">»</span>
+                <div style="flex:1;">
+                    <span class="stream-call">${call}</span>
+                    ${result ? `<br><span class="stream-meta">→ ${result}</span>` : ''}
+                </div>
+            `;
+            stream.appendChild(line);
+            stream.scrollTop = stream.scrollHeight;
+        }
+
+        function clearStream() {
+            document.getElementById('toolStream').innerHTML = '';
+        }
+
+        function selectIndication(btn, code) {
+            document.querySelectorAll('.indication-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentIndication = code;
+        }
+
+        function usePrompt(el) {
+            document.getElementById('chatInput').value = el.textContent;
+            // Auto-determine which cohort to load
+            const text = el.textContent.toLowerCase();
+            if (text.includes('cd8a') && text.includes('blca')) {
+                runQueryFor('TCGA-BLCA-CD8A', 'CD8A');
+            } else if (text.includes('keap1') || text.includes('lung')) {
+                runQueryFor('TCGA-LUAD-KEAP1', 'KEAP1');
+                document.querySelectorAll('.indication-btn').forEach((b, i) => {
+                    b.classList.remove('active');
+                    if (i === 1) b.classList.add('active');
+                });
+            } else if (text.includes('tp53') || text.includes('breast')) {
+                runQueryFor('TCGA-BRCA-TP53', 'TP53');
+                document.querySelectorAll('.indication-btn').forEach((b, i) => {
+                    b.classList.remove('active');
+                    if (i === 2) b.classList.add('active');
+                });
+            }
+        }
+
+        function runQuery() {
+            const input = document.getElementById('chatInput').value.trim();
+            const biomarker = document.getElementById('biomarkerInput').value.trim() || 'CD8A';
+            // Determine cohort
+            let cohortKey = `${currentIndication}-${biomarker}`;
+            if (!cohorts[cohortKey]) {
+                // Default fallback per indication
+                if (currentIndication === 'TCGA-BLCA') cohortKey = 'TCGA-BLCA-CD8A';
+                else if (currentIndication === 'TCGA-LUAD') cohortKey = 'TCGA-LUAD-KEAP1';
+                else if (currentIndication === 'TCGA-BRCA') cohortKey = 'TCGA-BRCA-TP53';
+                else if (currentIndication === 'TCGA-COAD') cohortKey = 'TCGA-COAD-MSI';
+            }
+            runQueryFor(cohortKey, biomarker);
+        }
+
+        function runQueryFor(cohortKey, biomarker) {
+            const cohort = cohorts[cohortKey];
+            if (!cohort) {
+                showToast('No cohort found', 'Try a different combination');
+                return;
+            }
+
+            // Show loading
+            const overlay = document.getElementById('loadingOverlay');
+            const bar = document.getElementById('loadingBar');
+            const stage = document.getElementById('loadingStage');
+            overlay.classList.add('active');
+
+            const stages = [
+                'Routing to FastMCP server...',
+                'Calling fetch_patient_metadata...',
+                'Querying cohort registry...',
+                'Calling split_cohort_by_biomarker...',
+                'Calling run_kaplan_meier...',
+                'Calling compute_hazard_ratio...',
+                'Rendering results...'
+            ];
+
+            let progress = 0;
+            let stageIdx = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 16 + 7;
+                if (progress > 100) progress = 100;
+                bar.style.width = progress + '%';
+                const newStage = Math.floor((progress / 100) * stages.length);
+                if (newStage !== stageIdx && newStage < stages.length) {
+                    stageIdx = newStage;
+                    stage.textContent = stages[stageIdx];
+                }
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        overlay.classList.remove('active');
+                        renderCohort(cohort, biomarker, cohortKey);
+                    }, 250);
+                }
+            }, 90);
+        }
+
+        function renderCohort(cohort, biomarker, cohortKey) {
+            // Update plot title
+            document.getElementById('plotTitle').textContent = cohort.title;
+            document.getElementById('plotSubtitle').textContent = cohort.subtitle;
+
+            // Draw curves
+            drawCurves(cohort);
+
+            // Update legend
+            document.getElementById('highN').textContent = cohort.highN;
+            document.getElementById('lowN').textContent = cohort.lowN;
+            document.getElementById('cohortInfo').textContent = `n=${cohort.highN + cohort.lowN}`;
+
+            // Cohort split
+            const total = cohort.highN + cohort.lowN;
+            const lowPct = (cohort.lowN / total * 100).toFixed(0);
+            const highPct = (cohort.highN / total * 100).toFixed(0);
+            document.getElementById('splitLow').style.width = lowPct + '%';
+            document.getElementById('splitHigh').style.width = highPct + '%';
+            document.getElementById('splitLow').textContent = `Low ${lowPct}%`;
+            document.getElementById('splitHigh').textContent = `High ${highPct}%`;
+            document.getElementById('lowCount').textContent = cohort.lowN;
+            document.getElementById('highCount').textContent = cohort.highN;
+
+            // Stats
+            document.getElementById('hrValue').textContent = cohort.hr.toFixed(2);
+            document.getElementById('hrCI').textContent = `95% CI: ${cohort.hrLow.toFixed(2)}–${cohort.hrHigh.toFixed(2)}`;
+            document.getElementById('pValue').textContent = cohort.p < 0.001 ? '< 0.001' : cohort.p.toFixed(4);
+            document.getElementById('pSig').textContent = cohort.p < 0.05 ? '✓ significant' : 'ns';
+            document.getElementById('medianHigh').textContent = cohort.medianHigh;
+            document.getElementById('medianLow').textContent = cohort.medianLow;
+
+            // Risk table
+            ['rh0','rh12','rh24','rh36','rh48','rh60'].forEach((id, i) => {
+                document.getElementById(id).textContent = cohort.riskHigh[i];
+            });
+            ['rl0','rl12','rl24','rl36','rl48','rl60'].forEach((id, i) => {
+                document.getElementById(id).textContent = cohort.riskLow[i];
+            });
+
+            // Tool stream
+            clearStream();
+            setTimeout(() => streamLine(`fetch_patient_metadata({cohort: "${cohortKey.split('-').slice(0,2).join('-')}"})`, `Returned ${cohort.highN + cohort.lowN} patients`), 100);
+            setTimeout(() => {
+                streamLine(`split_cohort_by_biomarker({biomarker: "${biomarker}", method: "median"})`, `High n=${cohort.highN}, Low n=${cohort.lowN}`);
+                counts.split++; counts.meta++;
+                document.getElementById('count-split').textContent = counts.split;
+                document.getElementById('count-meta').textContent = counts.meta;
+                highlightTool('tool-split');
+            }, 350);
+            setTimeout(() => {
+                streamLine(`run_kaplan_meier({groups: ["High", "Low"]})`, `KM curves computed across 60 months`);
+                counts.km++;
+                document.getElementById('count-km').textContent = counts.km;
+                highlightTool('tool-km');
+            }, 700);
+            setTimeout(() => {
+                streamLine(`compute_hazard_ratio({reference: "Low"})`, `HR = ${cohort.hr.toFixed(2)} (${cohort.hrLow.toFixed(2)}–${cohort.hrHigh.toFixed(2)}), p = ${cohort.p < 0.001 ? '<0.001' : cohort.p.toFixed(4)}`);
+                counts.hr++;
+                document.getElementById('count-hr').textContent = counts.hr;
+                highlightTool('tool-hr');
+            }, 1050);
+            setTimeout(() => {
+                showToast('Analysis complete', `${cohort.highN + cohort.lowN} patients · 4 tool calls`);
+            }, 1400);
+        }
+
+        function exportData(fmt) {
+            counts.export++;
+            document.getElementById('count-export').textContent = counts.export;
+            highlightTool('tool-export');
+            streamLine(`export_cohort_parquet({format: "${fmt}"})`, `Generated cohort_${Date.now()}.${fmt} (12.4 KB)`);
+            showToast(`Exported ${fmt.toUpperCase()}`, 'Download ready');
+        }
+
+        function showToast(title, message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastTitle').textContent = title;
+            document.getElementById('toastMessage').textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // Latency simulation
+        setInterval(() => {
+            const latency = (35 + Math.random() * 25).toFixed(0);
+            document.getElementById('latencyDisplay').textContent = `${latency}ms`;
+        }, 2000);
+
+        // Cmd+Enter shortcut
+        document.getElementById('chatInput').addEventListener('keydown', (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                e.preventDefault();
+                runQuery();
+            }
+        });
+
+        init();
+    </script>
+</body>
+</html>
